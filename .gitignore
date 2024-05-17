@@ -1,4 +1,6 @@
 node_modules
 .idea
+!ToConvert/README.MD
 ToConvert/*
+!Converted/README.MD
 Converted/*
