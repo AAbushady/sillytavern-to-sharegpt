@@ -7,6 +7,9 @@ import path from 'path';
 const toConvertDir = 'ToConvert';
 const convertedDir = 'Converted';
 
+// Utility Variables.
+const deleteOriginalFile = false;
+
 // Create the "Converted" directory if it doesn't exist
 if (!fs.existsSync(convertedDir)) {
   fs.mkdirSync(convertedDir);
@@ -43,8 +46,10 @@ files.forEach((file: any) => {
 
     console.log(`Converted ${file} to ${outputFileName}`);
 
-    // Delete the processed JSONL file from the "ToConvert" directory
-    fs.unlinkSync(filePath);
+    if (deleteOriginalFile) {
+      // Delete the processed JSONL file from the "ToConvert" directory
+      fs.unlinkSync(filePath);
+    }
   }
 });
 

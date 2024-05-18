@@ -3,11 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// @ts-ignore
 const fs_1 = __importDefault(require("fs"));
+// @ts-ignore
 const path_1 = __importDefault(require("path"));
 // Directory paths
 const toConvertDir = 'ToConvert';
 const convertedDir = 'Converted';
+// Utility Variables.
+const deleteOriginalFile = false;
 // Create the "Converted" directory if it doesn't exist
 if (!fs_1.default.existsSync(convertedDir)) {
     fs_1.default.mkdirSync(convertedDir);
@@ -37,8 +41,10 @@ files.forEach((file) => {
         // Write the converted data to a new file in the "Converted" directory
         fs_1.default.writeFileSync(outputFilePath, JSON.stringify(shareGptData, null, 2));
         console.log(`Converted ${file} to ${outputFileName}`);
-        // Delete the processed JSONL file from the "ToConvert" directory
-        fs_1.default.unlinkSync(filePath);
+        if (deleteOriginalFile) {
+            // Delete the processed JSONL file from the "ToConvert" directory
+            fs_1.default.unlinkSync(filePath);
+        }
     }
 });
 console.log('Conversion complete!');
