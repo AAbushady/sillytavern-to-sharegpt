@@ -27,12 +27,12 @@ files.forEach((file: any) => {
     const entries = lines.map((line: string) => JSON.parse(line));
 
     // Filter out entries without a valid 'mes' property
-    const validEntries = entries.filter((entry) => entry.mes && entry.mes.trim() !== '');
+    const validEntries = entries.filter((entry: { mes: string; }) => entry.mes && entry.mes.trim() !== '');
 
     // Convert the data to ShareGPT format
     const shareGptData = {
       id: validEntries[0]?.swipe_id || '',
-      conversations: validEntries.map((entry) => {
+      conversations: validEntries.map((entry: { is_user: any; mes: any; }) => {
         return {
           from: entry.is_user ? 'human' : 'gpt',
           value: entry.mes,
