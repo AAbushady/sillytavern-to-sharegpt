@@ -10,6 +10,13 @@ const convertedDir = 'Converted';
 // Utility Variables.
 const deleteOriginalFile = false;
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+// Default to NOT including reasoning unless explicitly requested with --reasoning flag
+const includeReasoning = args.includes('--reasoning');
+
+console.log(`Including reasoning: ${includeReasoning ? 'Yes' : 'No'}`);
+
 // Create the "Converted" directory if it doesn't exist
 if (!fs.existsSync(convertedDir)) {
   fs.mkdirSync(convertedDir);
@@ -29,23 +36,43 @@ files.forEach((file: any) => {
     // Filter out entries without a valid 'mes' property
     const validEntries = entries.filter((entry: { mes: string; }) => entry.mes && entry.mes.trim() !== '');
 
-    // Convert the data to ShareGPT format
-    const shareGptData = {
-      id: validEntries[0]?.swipe_id || '',
-      conversations: validEntries.map((entry: { is_user: any; mes: any; }) => {
-        return {
-          from: entry.is_user ? 'human' : 'gpt',
-          value: entry.mes,
-        };
-      }),
-    };
+    // Convert the entries to the desired format
+    const outputLines: string[] = [];
 
-    // Generate the output file name
-    const outputFileName = `${path.parse(file).name}.json`;
+    // Process each valid entry
+    validEntries.forEach((entry: { is_user: any; mes: any; extra?: any; }) => {
+      // Process the message value
+      let messageValue = entry.mes;
+      
+      // Only add reasoning if the flag is set
+      if (includeReasoning) {
+        // Check if reasoning exists in the extra field
+        if (entry.extra && entry.extra.reasoning && entry.extra.reasoning.trim() !== '') {
+          // Add the reasoning at the beginning of the message wrapped in <think> tags
+          messageValue = `<think>${entry.extra.reasoning}</think> ${messageValue}`;
+        }
+        // Also check if there's reasoning in a nested structure (in case the structure varies)
+        else if (entry.extra && entry.extra.api && entry.extra.reasoning_type && entry.extra.reasoning && entry.extra.reasoning.trim() !== '') {
+          messageValue = `<think>${entry.extra.reasoning}</think> ${messageValue}`;
+        }
+      }
+      
+      // Create the output object for this entry
+      const outputEntry = {
+        from: entry.is_user ? 'human' : 'gpt',
+        value: messageValue
+      };
+      
+      // Add the JSON stringified entry to our output lines
+      outputLines.push(JSON.stringify(outputEntry));
+    });
+
+    // Generate the output file name with .jsonl extension
+    const outputFileName = `${path.parse(file).name}.jsonl`;
     const outputFilePath = path.join(convertedDir, outputFileName);
 
-    // Write the converted data to a new file in the "Converted" directory
-    fs.writeFileSync(outputFilePath, JSON.stringify(shareGptData, null, 2));
+    // Write the converted data as JSONL format (one JSON object per line)
+    fs.writeFileSync(outputFilePath, outputLines.join('\n'));
 
     console.log(`Converted ${file} to ${outputFileName}`);
 
