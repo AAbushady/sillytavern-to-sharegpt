@@ -69,7 +69,6 @@ In Alpaca format:
 - The `input` field contains the full conversation history
 - The `output` field contains the last character response
 
-
 ### Name Anonymization
 
 When using the anonymize feature, the script:
