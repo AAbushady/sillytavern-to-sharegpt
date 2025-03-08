@@ -6,13 +6,27 @@ A node.js script to convert SillyTavern chat logs into ShareGPT format!
 
 - Clone or download the repository.
 - Run `npm install` to install the dependencies.
-- Run `npx tsc` for the TypeScript code.
 - Add desired logs into the ToConvert Folder.
-- Run `node dist/index.js` to run the script.
+- Run `npm start -- [options]` to execute the script directly.
+  - For example: `npm start -- --anonymize male`
 - Your files are now in the Converted Folder!
 
 ## Optional Commands
 
-- Optional commands are to be added at the end of the node dist/index.js command.
-- If your chat has reasoning use `--reasoning` at the end of the command to include \<think> tags!!
-- Use `--delete` if you want to delete the original file!!
+- Optional commands are to be added at the end of the command.
+- `--reasoning`: Include reasoning as \<think> tags at the beginning of messages
+- `--delete`: Delete original files after conversion
+- `--anonymize [gender]`: Replace user names with realistic random alternatives
+  - Optional gender parameter: `male` or `female` (e.g., `--anonymize male`)
+  - Without gender parameter: Uses random gender names
+
+### Name Anonymization
+
+When using the anonymize feature, the script:
+
+1. Automatically detects all user names in your data files
+2. Replaces them with realistic random names from Faker.js's database
+3. Generates different random names for each file
+4. Only changes user names, leaving character names intact
+
+Each file processed will get its own set of random name replacements, ensuring variety across your dataset while maintaining consistency within each conversation.
