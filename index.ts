@@ -8,14 +8,11 @@ const toConvertDir = 'ToConvert';
 const convertedDir = 'Converted';
 
 // Utility Variables.
-const deleteOriginalFile = false;
-
 // Parse command line arguments
-const args = process.argv.slice(2);
+const args = process.argv.slice(3);
 // Default to NOT including reasoning unless explicitly requested with --reasoning flag
 const includeReasoning = args.includes('--reasoning');
-
-console.log(`Including reasoning: ${includeReasoning ? 'Yes' : 'No'}`);
+const deleteOriginalFile = args.includes('--delete');
 
 // Create the "Converted" directory if it doesn't exist
 if (!fs.existsSync(convertedDir)) {
