@@ -1,6 +1,6 @@
 # SillyTavern To ShareGPT
 
-A node.js script to convert SillyTavern chat logs into ShareGPT format and other formats for LLM fine-tuning!
+A TypeScript application that converts SillyTavern chat logs into formats suitable for LLM fine-tuning and sharing, including ShareGPT and Alpaca formats.
 
 ## How To Use
 
