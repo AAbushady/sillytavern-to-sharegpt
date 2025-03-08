@@ -12,18 +12,20 @@ export interface ConversionOptions {
 }
 
 // Generic interface for format converters
-export interface FormatConverter<T> {
+export interface FormatConverter<T, M = any> {
   convertEntry: (
     entry: any, 
     includeReasoning: boolean, 
-    nameReplacer: NameReplacer | null
-  ) => T;
+    nameReplacer: NameReplacer | null,
+    metadata?: any
+  ) => M;
   isValidEntry: (entry: any) => boolean;
-  serializeEntry: (entry: T) => string;
+  serializeEntry: (entries: M[] | T, metadata?: any) => string;
+  extractMetadata?: (entries: any[]) => any;
 }
 
 // Registry of available format converters
-const formatConverters: Record<string, FormatConverter<any>> = {
+const formatConverters: Record<string, FormatConverter<any, any>> = {
   'sharegpt': ShareGPTConverter,
   // Add more formats here as they are implemented
   // 'alpaca': AlpacaConverter,
@@ -32,7 +34,7 @@ const formatConverters: Record<string, FormatConverter<any>> = {
 /**
  * Get the converter for the specified format
  */
-export function getFormatConverter(format: string): FormatConverter<any> {
+export function getFormatConverter(format: string): FormatConverter<any, any> {
   const converter = formatConverters[format.toLowerCase()];
   if (!converter) {
     const supportedFormats = Object.keys(formatConverters).join(', ');
@@ -48,11 +50,11 @@ export function getSupportedFormats(): string[] {
   return Object.keys(formatConverters);
 }
 
-export function convertFile<T>(
+export function convertFile<T, M = any>(
   filePath: string, 
   outputFilePath: string, 
   options: ConversionOptions,
-  formatConverter: FormatConverter<T>
+  formatConverter: FormatConverter<T, M>
 ): void {
   const { includeReasoning, anonymizeNames, userGender, deleteOriginalFile } = options;
   
@@ -67,26 +69,22 @@ export function convertFile<T>(
     nameReplacer.initialize(entries);
   }
 
+  // Extract metadata if the converter supports it
+  const metadata = formatConverter.extractMetadata ? formatConverter.extractMetadata(entries) : undefined;
+
   // Filter out entries without required properties
   const validEntries = entries.filter(entry => formatConverter.isValidEntry(entry));
 
-  // Convert the entries to the desired format
-  const outputLines: string[] = [];
+  // Convert all valid entries
+  const convertedEntries: M[] = validEntries.map(entry => 
+    formatConverter.convertEntry(entry, includeReasoning, nameReplacer, metadata)
+  );
 
-  // Process each valid entry
-  validEntries.forEach(entry => {
-    // Convert entry using the format converter
-    const convertedEntry = formatConverter.convertEntry(entry, includeReasoning, nameReplacer);
-    
-    // Serialize the entry to a string
-    const serializedEntry = formatConverter.serializeEntry(convertedEntry);
-    
-    // Add the serialized entry to our output lines
-    outputLines.push(serializedEntry);
-  });
+  // Serialize all entries to a single output string
+  const outputContent = formatConverter.serializeEntry(convertedEntries, metadata);
 
-  // Write the converted data as JSONL format (one JSON object per line)
-  fs.writeFileSync(outputFilePath, outputLines.join('\n'));
+  // Write the converted data to the output file
+  fs.writeFileSync(outputFilePath, outputContent);
 
   const fileName = path.basename(filePath);
   const outputFileName = path.basename(outputFilePath);
@@ -122,7 +120,7 @@ export function convertDirectory(
     if (path.extname(file) === '.jsonl') {
       const filePath = path.join(inputDir, file);
       
-      // Generate the output file name with .jsonl extension
+      // Keep the .jsonl extension for the output file
       const outputFileName = `${path.parse(file).name}.jsonl`;
       const outputFilePath = path.join(outputDir, outputFileName);
       

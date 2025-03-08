@@ -1,19 +1,52 @@
 import { NameReplacer } from './nameReplacer';
 import { FormatConverter } from './converter';
 
-export interface ShareGPTEntry {
-  from: 'human' | 'gpt';
+export interface ShareGPTMessage {
+  from: 'human' | 'gpt' | 'system';
   value: string;
+}
+
+export interface ShareGPTConversation {
+  conversations: ShareGPTMessage[];
+}
+
+export interface ShareGPTMetadata {
+  characterName?: string;
 }
 
 /**
  * ShareGPT format converter implementation
  */
-export const ShareGPTConverter: FormatConverter<ShareGPTEntry> = {
+export const ShareGPTConverter: FormatConverter<ShareGPTConversation, ShareGPTMessage> = {
+  /**
+   * Extract metadata from SillyTavern entries, specifically looking for character info
+   */
+  extractMetadata(entries: any[]): ShareGPTMetadata {
+    const metadata: ShareGPTMetadata = {};
+    
+    // Find the character name from the entries
+    // First look at chat metadata if available
+    const chatMetaEntry = entries.find(e => e.chat_metadata && e.chat_metadata.character_name);
+    if (chatMetaEntry && chatMetaEntry.chat_metadata.character_name) {
+      metadata.characterName = chatMetaEntry.chat_metadata.character_name;
+      return metadata;
+    }
+
+    // Next, look for non-user messages with a name field
+    for (const entry of entries) {
+      if (!entry.is_user && entry.name && entry.name.trim() !== '') {
+        metadata.characterName = entry.name;
+        return metadata;
+      }
+    }
+    
+    return metadata;
+  },
+
   /**
    * Converts a SillyTavern entry to ShareGPT format
    */
-  convertEntry(entry: any, includeReasoning: boolean, nameReplacer: NameReplacer | null): ShareGPTEntry {
+  convertEntry(entry: any, includeReasoning: boolean, nameReplacer: NameReplacer | null, metadata?: ShareGPTMetadata): ShareGPTMessage {
     // Process the message value
     let messageValue = entry.mes;
     
@@ -58,9 +91,42 @@ export const ShareGPTConverter: FormatConverter<ShareGPTEntry> = {
   },
 
   /**
-   * Serializes a ShareGPT entry to a string
+   * Process all messages and create a JSONL format string
+   * Each file will contain one conversation
    */
-  serializeEntry(entry: ShareGPTEntry): string {
-    return JSON.stringify(entry);
+  serializeEntry(entriesOrConversation: ShareGPTMessage[] | ShareGPTConversation, metadata?: ShareGPTMetadata): string {
+    // If it's already a ShareGPTConversation, just stringify it
+    if (!Array.isArray(entriesOrConversation)) {
+      return JSON.stringify(entriesOrConversation);
+    }
+    
+    // Otherwise, it's an array of messages
+    const entries = entriesOrConversation;
+    
+    // Check if we already have a system message
+    if (!entries.some(entry => entry.from === 'system')) {
+      // Create a roleplaying-focused system message
+      let systemMessage: string;
+      
+      if (metadata?.characterName) {
+        systemMessage = `You are ${metadata.characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.`;
+      } else {
+        systemMessage = 'You are a character in a roleplay scenario. Respond in character, maintaining the established tone and style.';
+      }
+      
+      entries.unshift({
+        from: 'system',
+        value: systemMessage
+      });
+    }
+    
+    // For JSONL format, we create a single conversation object
+    const conversation: ShareGPTConversation = {
+      conversations: entries
+    };
+    
+    // Return the JSON string of the entire conversation 
+    // For JSONL, we just need a single line since each file represents one conversation
+    return JSON.stringify(conversation);
   }
 }; 
