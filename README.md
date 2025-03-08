@@ -22,6 +22,10 @@ A node.js script to convert SillyTavern chat logs into ShareGPT format!
 - `--format [format]`: Specify the output format
   - Currently supported format: `sharegpt` (default)
   - Example: `npm start -- --format sharegpt`
+- `--combine [filename]`: Combine all converted files into a single file
+  - Optional filename parameter (e.g., `--combine dataset.jsonl`)
+  - Without filename parameter: Uses `combined.jsonl` as default
+  - Example: `npm start -- --combine my_dataset.jsonl`
 
 ### Name Anonymization
 

@@ -9,6 +9,8 @@ export interface ConversionOptions {
   anonymizeNames: boolean;
   userGender: string | null;
   format: string; // Added to specify which format to convert to
+  combineFiles?: boolean; // Whether to combine all files into one
+  combinedFileName?: string; // Name of the combined file
 }
 
 // Generic interface for format converters
