@@ -19,6 +19,9 @@ A node.js script to convert SillyTavern chat logs into ShareGPT format!
 - `--anonymize [gender]`: Replace user names with realistic random alternatives
   - Optional gender parameter: `male` or `female` (e.g., `--anonymize male`)
   - Without gender parameter: Uses random gender names
+- `--format [format]`: Specify the output format
+  - Currently supported format: `sharegpt` (default)
+  - Example: `npm start -- --format sharegpt`
 
 ### Name Anonymization
 
