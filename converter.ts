@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { NameReplacer } from './nameReplacer';
 import { ShareGPTConverter } from './sharegpt';
+import { AlpacaConverter } from './alpaca';
 
 export interface ConversionOptions {
   includeReasoning: boolean;
@@ -29,9 +30,29 @@ export interface FormatConverter<T, M = any> {
 // Registry of available format converters
 const formatConverters: Record<string, FormatConverter<any, any>> = {
   'sharegpt': ShareGPTConverter,
-  // Add more formats here as they are implemented
-  // 'alpaca': AlpacaConverter,
+  'alpaca': AlpacaConverter,
 };
+
+/**
+ * Get the file extension for the specified format
+ */
+export function getFormatExtension(format: string): string {
+  // Default to .jsonl extension
+  let extension = '.jsonl';
+  
+  // Use specific extensions for certain formats
+  switch (format.toLowerCase()) {
+    case 'alpaca':
+      extension = '.json';
+      break;
+    case 'sharegpt':
+    default:
+      extension = '.jsonl';
+      break;
+  }
+  
+  return extension;
+}
 
 /**
  * Get the converter for the specified format
@@ -108,6 +129,8 @@ export function convertDirectory(
 ): void {
   // Get the appropriate converter for the specified format
   const formatConverter = getFormatConverter(options.format);
+  // Get the appropriate file extension for the specified format
+  const formatExtension = getFormatExtension(options.format);
 
   // Create the output directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -122,8 +145,8 @@ export function convertDirectory(
     if (path.extname(file) === '.jsonl') {
       const filePath = path.join(inputDir, file);
       
-      // Keep the .jsonl extension for the output file
-      const outputFileName = `${path.parse(file).name}.jsonl`;
+      // Use the appropriate extension for the output file
+      const outputFileName = `${path.parse(file).name}${formatExtension}`;
       const outputFilePath = path.join(outputDir, outputFileName);
       
       convertFile(filePath, outputFilePath, options, formatConverter);

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { convertDirectory, ConversionOptions, getSupportedFormats } from './converter';
+import { convertDirectory, ConversionOptions, getSupportedFormats, getFormatExtension } from './converter';
 
 // Directory paths
 const toConvertDir = 'ToConvert';
@@ -41,7 +41,7 @@ if (formatIndex !== -1 && formatIndex < args.length - 1) {
 
 // Handle combine option
 let combineFiles = false;
-let combinedFileName = 'combined.jsonl';
+let combinedFileName = 'combined';
 const combineIndex = args.findIndex(arg => arg === '--combine');
 if (combineIndex !== -1) {
   combineFiles = true;
@@ -49,13 +49,20 @@ if (combineIndex !== -1) {
   // Check for filename specification in the next argument
   if (combineIndex < args.length - 1 && !args[combineIndex + 1].startsWith('--')) {
     combinedFileName = args[combineIndex + 1];
-    // Add .jsonl extension if not provided
-    if (!combinedFileName.endsWith('.jsonl')) {
-      combinedFileName += '.jsonl';
-    }
+    // Strip any extension if provided, as we'll add the correct one later
+    combinedFileName = combinedFileName.replace(/\.[^/.]+$/, "");
   }
-  console.log(`Will combine all files into: ${combinedFileName}`);
 }
+
+// Get the appropriate extension for the selected format
+const formatExtension = getFormatExtension(format);
+
+// Add the appropriate extension based on format
+if (!combinedFileName.endsWith(formatExtension)) {
+  combinedFileName += formatExtension;
+}
+
+console.log(`Will combine all files into: ${combinedFileName}`);
 
 // Log configuration
 console.log(`Output format: ${format}`);
@@ -87,31 +94,58 @@ try {
     // Create the combined file path
     const combinedFilePath = path.join(convertedDir, combinedFileName);
     
-    // Get all JSONL files in the converted directory
+    // Get all files with the right extension in the converted directory
     const convertedFiles = fs.readdirSync(convertedDir)
-      .filter(file => file.endsWith('.jsonl') && file !== combinedFileName);
+      .filter(file => file.endsWith(formatExtension) && file !== combinedFileName);
     
     if (convertedFiles.length === 0) {
       console.log('No files to combine!');
       process.exit(0);
     }
     
-    // Read all files and combine their contents
+    // Read all files and combine their contents based on format
     let combinedContent = '';
     
-    convertedFiles.forEach(file => {
-      const filePath = path.join(convertedDir, file);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      combinedContent += content + '\n';
+    // For JSON array formats like Alpaca, we need to merge the arrays
+    if (format === 'alpaca') {
+      // For JSON array formats, we need to parse and merge arrays
+      const allEntries: any[] = [];
       
-      // Delete individual files if option is enabled
-      if (combineFiles) {
-        fs.unlinkSync(filePath);
-      }
-    });
+      convertedFiles.forEach(file => {
+        const filePath = path.join(convertedDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const parsedContent = JSON.parse(content);
+        
+        // Add all entries from this file to our combined array
+        allEntries.push(...parsedContent);
+        
+        // Delete individual files if option is enabled
+        if (combineFiles) {
+          fs.unlinkSync(filePath);
+        }
+      });
+      
+      // Convert the combined array back to a JSON string
+      combinedContent = JSON.stringify(allEntries, null, 2);
+    } else {
+      // For JSONL formats like ShareGPT, we just concatenate with newlines
+      convertedFiles.forEach(file => {
+        const filePath = path.join(convertedDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        combinedContent += content + '\n';
+        
+        // Delete individual files if option is enabled
+        if (combineFiles) {
+          fs.unlinkSync(filePath);
+        }
+      });
+      
+      // Trim any extra whitespace for JSONL format
+      combinedContent = combinedContent.trim();
+    }
     
     // Write the combined content to the combined file
-    fs.writeFileSync(combinedFilePath, combinedContent.trim());
+    fs.writeFileSync(combinedFilePath, combinedContent);
     console.log(`Combined ${convertedFiles.length} files into ${combinedFileName}`);
   }
 } catch (error: any) {
