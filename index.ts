@@ -27,7 +27,6 @@ if (anonymizeIndex !== -1) {
     const potentialGender = args[anonymizeIndex + 1].toLowerCase();
     if (potentialGender === 'male' || potentialGender === 'female') {
       userGender = potentialGender;
-      console.log(`Detected gender parameter: ${userGender}`);
     }
   }
 }
@@ -62,8 +61,6 @@ if (!combinedFileName.endsWith(formatExtension)) {
   combinedFileName += formatExtension;
 }
 
-console.log(`Will combine all files into: ${combinedFileName}`);
-
 // Log configuration
 console.log(`Output format: ${format}`);
 console.log(`Including reasoning: ${includeReasoning ? 'Yes' : 'No'}`);
@@ -72,7 +69,7 @@ console.log(`Anonymize names: ${anonymizeNames ? 'Yes' : 'No'}`);
 if (anonymizeNames) {
   console.log(`User gender preference: ${userGender || 'random'}`);
 }
-console.log(`Combine files: ${combineFiles ? 'Yes' : 'No'}`);
+console.log(`Combine files: ${combineFiles ? 'Yes' : 'No'}\n`);
 
 // Prepare conversion options
 const conversionOptions: ConversionOptions = {

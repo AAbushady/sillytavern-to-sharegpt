@@ -18,7 +18,7 @@ The application uses a configuration file (`config.json`) for customizing variou
 ```json
 {
   "systemMessages": {
-    "sharegpt": "You are {characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.",
+    "sharegpt": "You are {characterName}, a character in a roleplay scenario with {userName}. Respond in character, maintaining the established tone and style.",
     "alpaca": "You are an AI assistant. Provide helpful, detailed, and accurate responses to the user's instructions."
   }
 }
@@ -26,6 +26,7 @@ The application uses a configuration file (`config.json`) for customizing variou
 
 - `systemMessages`: Customize the system messages for each format
   - Use `{characterName}` as a placeholder that will be replaced with the actual character name
+  - User `{userName}` as a placeholder that will be replaced with either the actual user's name or the anonymized version.
 
 If the configuration file doesn't exist, default values will be used.
 

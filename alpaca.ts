@@ -24,6 +24,7 @@ export interface AlpacaDataset {
  */
 export interface AlpacaMetadata {
   characterName?: string;
+  userName?: string;
 }
 
 /**
@@ -32,7 +33,7 @@ export interface AlpacaMetadata {
  */
 export const AlpacaConverter: FormatConverter<AlpacaDataset, AlpacaEntry> = {
   /**
-   * Extract metadata from SillyTavern entries, specifically looking for character info
+   * Extract metadata from SillyTavern entries, specifically looking for character and user info
    */
   extractMetadata(entries: any[]): AlpacaMetadata {
     const metadata: AlpacaMetadata = {};
@@ -42,14 +43,30 @@ export const AlpacaConverter: FormatConverter<AlpacaDataset, AlpacaEntry> = {
     const chatMetaEntry = entries.find(e => e.chat_metadata && e.chat_metadata.character_name);
     if (chatMetaEntry && chatMetaEntry.chat_metadata.character_name) {
       metadata.characterName = chatMetaEntry.chat_metadata.character_name;
-      return metadata;
     }
 
-    // Next, look for non-user messages with a name field
-    for (const entry of entries) {
-      if (!entry.is_user && entry.name && entry.name.trim() !== '') {
-        metadata.characterName = entry.name;
-        return metadata;
+    // If not found in chat metadata, look for non-user messages with a name field
+    if (!metadata.characterName) {
+      for (const entry of entries) {
+        if (!entry.is_user && entry.name && entry.name.trim() !== '') {
+          metadata.characterName = entry.name;
+          break;
+        }
+      }
+    }
+    
+    // Look for user name in chat metadata
+    if (chatMetaEntry && chatMetaEntry.chat_metadata.user_name) {
+      metadata.userName = chatMetaEntry.chat_metadata.user_name;
+    }
+    
+    // If not found in chat metadata, look for user messages with a name field
+    if (!metadata.userName) {
+      for (const entry of entries) {
+        if (entry.is_user && entry.name && entry.name.trim() !== '') {
+          metadata.userName = entry.name;
+          break;
+        }
       }
     }
     
@@ -174,12 +191,35 @@ export const AlpacaConverter: FormatConverter<AlpacaDataset, AlpacaEntry> = {
         console.log('Error reading config file. Using default system message.');
       }
       
+      // Check if instruction contains the placeholders
+      const hasCharacterNamePlaceholder = instruction.includes('{characterName}');
+      const hasUserNamePlaceholder = instruction.includes('{userName}');
+      
       // Replace placeholder with character name if available
-      if (metadata?.characterName) {
-        instruction = instruction.replace('{characterName}', characterName);
-      } else {
-        // If no character name is available, remove the placeholder
-        instruction = instruction.replace('{characterName}', 'an AI assistant');
+      if (hasCharacterNamePlaceholder) {
+        if (metadata?.characterName) {
+          instruction = instruction.replace(/{characterName}/g, characterName);
+        } else {
+          // If no character name is available, remove the placeholder
+          instruction = instruction.replace(/{characterName}/g, 'an AI assistant');
+        }
+      }
+      
+      // Replace placeholder with user name if available
+      if (hasUserNamePlaceholder) {
+        if (nameReplacer !== null && nameReplacer !== undefined) {
+          // Get a random user name from the nameReplacer - use same logic as ShareGPT
+          const replacedName = nameReplacer.getRandomUserName();
+          instruction = instruction.replace(/{userName}/g, replacedName);
+        } else if (metadata?.userName) {
+          // Only use metadata.userName if nameReplacer is not available
+          console.log(`No nameReplacer available, using metadata userName '${metadata.userName}'`);
+          instruction = instruction.replace(/{userName}/g, metadata.userName);
+        } else {
+          console.log(`No nameReplacer or userName available, replacing {userName} with 'User'`);
+          // If no nameReplacer or userName is available, use default
+          instruction = instruction.replace(/{userName}/g, 'User');
+        }
       }
       
       alpacaEntries.push({

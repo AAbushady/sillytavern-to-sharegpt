@@ -131,15 +131,11 @@ export const ShareGPTConverter: FormatConverter<ShareGPTConversation, ShareGPTMe
       const hasCharacterNamePlaceholder = systemMessage.includes('{characterName}');
       const hasUserNamePlaceholder = systemMessage.includes('{userName}');
       
-      console.log(`System message contains placeholders: {characterName}: ${hasCharacterNamePlaceholder}, {userName}: ${hasUserNamePlaceholder}`);
-      
       // Replace placeholder with character name if available
       if (hasCharacterNamePlaceholder) {
         if (metadata?.characterName) {
-          console.log(`Replacing {characterName} with '${metadata.characterName}'`);
           systemMessage = systemMessage.replace(/{characterName}/g, metadata.characterName);
         } else {
-          console.log(`No character name available, replacing {characterName} with 'a'`);
           // If no character name is available, remove the placeholder
           systemMessage = systemMessage.replace(/{characterName}/g, 'a');
         }
@@ -148,21 +144,16 @@ export const ShareGPTConverter: FormatConverter<ShareGPTConversation, ShareGPTMe
       // Replace placeholder with user name if available
       if (hasUserNamePlaceholder) {
         if (metadata?.userName) {
-          console.log(`Replacing {userName} with '${metadata.userName}'`);
           systemMessage = systemMessage.replace(/{userName}/g, metadata.userName);
         } else if (nameReplacer !== null && nameReplacer !== undefined) {
           // Get a random user name from the nameReplacer
           const replacedName = nameReplacer.getRandomUserName();
-          console.log(`Replacing {userName} with nameReplacer-generated '${replacedName}'`);
           systemMessage = systemMessage.replace(/{userName}/g, replacedName);
         } else {
-          console.log(`No user name available, replacing {userName} with 'User'`);
           // If no user name is available, remove the placeholder
           systemMessage = systemMessage.replace(/{userName}/g, 'User');
         }
       }
-      
-      console.log(`Final system message: ${systemMessage}`);
       
       entries.unshift({
         from: 'system',

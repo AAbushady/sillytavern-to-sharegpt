@@ -111,7 +111,7 @@ export function convertFile<T, M = any>(
 
   const fileName = path.basename(filePath);
   const outputFileName = path.basename(outputFilePath);
-  console.log(`Converted ${fileName} to ${outputFileName} in ${options.format} format`);
+  console.log(`\nConverted ${fileName} to ${outputFileName} in ${options.format} format\n`);
 
   if (deleteOriginalFile) {
     // Delete the processed JSONL file
@@ -153,5 +153,5 @@ export function convertDirectory(
     }
   });
 
-  console.log(`Conversion to ${options.format} format complete!`);
+  console.log(`Conversion to ${options.format} format complete!\n`);
 } 
