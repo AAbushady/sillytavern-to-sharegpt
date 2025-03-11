@@ -84,6 +84,18 @@ export class NameReplacer {
     return result;
   }
   
+  // Get a username to use in system messages
+  public getRandomUserName(): string {
+    // If we have any replacement names, return one of them
+    if (this.nameMap.size > 0) {
+      const names = Array.from(this.nameMap.values());
+      return names[0]; // Just use the first replacement name
+    }
+    
+    // If no replacement names exist, generate a new one
+    return this.generateRealisticName();
+  }
+  
   // Helper function to escape special regex characters
   private escapeRegExp(string: string): string {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

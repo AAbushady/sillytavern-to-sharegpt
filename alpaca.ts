@@ -109,7 +109,7 @@ export const AlpacaConverter: FormatConverter<AlpacaDataset, AlpacaEntry> = {
    * Process all messages and create a JSON format string
    * This condenses multi-turn conversations into single Alpaca entries
    */
-  serializeEntry(entriesOrDataset: any[] | AlpacaDataset, metadata?: AlpacaMetadata): string {
+  serializeEntry(entriesOrDataset: any[] | AlpacaDataset, metadata?: AlpacaMetadata, nameReplacer?: NameReplacer | null): string {
     // If it's already an AlpacaDataset, just stringify it
     if (!Array.isArray(entriesOrDataset)) {
       // Convert dataset to a JSON array

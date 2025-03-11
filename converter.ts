@@ -23,7 +23,7 @@ export interface FormatConverter<T, M = any> {
     metadata?: any
   ) => M;
   isValidEntry: (entry: any) => boolean;
-  serializeEntry: (entries: M[] | T, metadata?: any) => string;
+  serializeEntry: (entries: M[] | T, metadata?: any, nameReplacer?: NameReplacer | null) => string;
   extractMetadata?: (entries: any[]) => any;
 }
 
@@ -104,7 +104,7 @@ export function convertFile<T, M = any>(
   );
 
   // Serialize all entries to a single output string
-  const outputContent = formatConverter.serializeEntry(convertedEntries, metadata);
+  const outputContent = formatConverter.serializeEntry(convertedEntries, metadata, nameReplacer);
 
   // Write the converted data to the output file
   fs.writeFileSync(outputFilePath, outputContent);
