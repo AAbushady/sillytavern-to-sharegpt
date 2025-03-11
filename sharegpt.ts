@@ -1,5 +1,7 @@
 import { NameReplacer } from './nameReplacer';
 import { FormatConverter } from './converter';
+import fs from 'fs';
+import path from 'path';
 
 export interface ShareGPTMessage {
   from: 'human' | 'gpt' | 'system';
@@ -105,13 +107,31 @@ export const ShareGPTConverter: FormatConverter<ShareGPTConversation, ShareGPTMe
     
     // Check if we already have a system message
     if (!entries.some(entry => entry.from === 'system')) {
-      // Create a roleplaying-focused system message
-      let systemMessage: string;
+      // Get system message from config
+      let systemMessage = 'You are a character in a roleplay scenario. Respond in character, maintaining the established tone and style.';
       
+      try {
+        // Read the config file
+        const configPath = path.join(process.cwd(), 'config.json');
+        if (fs.existsSync(configPath)) {
+          const configData = fs.readFileSync(configPath, 'utf-8');
+          const config = JSON.parse(configData);
+          
+          // Get the system message for ShareGPT if it exists
+          if (config.systemMessages && config.systemMessages.sharegpt) {
+            systemMessage = config.systemMessages.sharegpt;
+          }
+        }
+      } catch (error) {
+        console.log('Error reading config file. Using default system message.');
+      }
+      
+      // Replace placeholder with character name if available
       if (metadata?.characterName) {
-        systemMessage = `You are ${metadata.characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.`;
+        systemMessage = systemMessage.replace('{characterName}', metadata.characterName);
       } else {
-        systemMessage = 'You are a character in a roleplay scenario. Respond in character, maintaining the established tone and style.';
+        // If no character name is available, remove the placeholder
+        systemMessage = systemMessage.replace('{characterName}', 'a');
       }
       
       entries.unshift({

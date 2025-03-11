@@ -11,6 +11,26 @@ A TypeScript application that converts SillyTavern chat logs into formats suitab
   - For example: `npm start -- --anonymize male`
 - Your files are now in the Converted Folder!
 
+## Configuration
+
+The application uses a configuration file (`config.json`) for customizing various settings:
+
+```json
+{
+  "systemMessages": {
+    "sharegpt": "You are {characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.",
+    "alpaca": "You are an AI assistant. Provide helpful, detailed, and accurate responses to the user's instructions."
+  }
+}
+```
+
+- `systemMessages`: Customize the system messages for each format
+  - Use `{characterName}` as a placeholder that will be replaced with the actual character name
+
+If the configuration file doesn't exist, default values will be used.
+
+You should make a copy of the config.json.example file and rename to config.json, make changes in this new file!
+
 ## Optional Commands
 
 - Optional commands are to be added at the end of the command.

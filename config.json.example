@@ -1,0 +1,6 @@
+{
+  "systemMessages": {
+    "sharegpt": "You are {characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.",
+    "alpaca": "You are an AI assistant. Provide helpful, detailed, and accurate responses to the user's instructions."
+  }
+} 

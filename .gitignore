@@ -1,6 +1,7 @@
 node_modules
 .idea
-!ToConvert/README.MD
+!ToConvert/.gitkeep
 ToConvert/*
-!Converted/README.MD
+!Converted/.gitkeep
 Converted/*
+config.json

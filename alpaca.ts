@@ -1,5 +1,7 @@
 import { NameReplacer } from './nameReplacer';
 import { FormatConverter } from './converter';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Interface for a single Alpaca format entry
@@ -153,8 +155,32 @@ export const AlpacaConverter: FormatConverter<AlpacaDataset, AlpacaEntry> = {
     
     // Only create an entry if we have at least one character response
     if (hasCharacterResponse) {
-      // Create the instruction as a system message
-      const instruction = `You are ${characterName}, a character in a roleplay scenario. Respond in character, maintaining the established tone and style.`;
+      // Default system message
+      let instruction = `You are an AI assistant. Provide helpful, detailed, and accurate responses to the user's instructions.`;
+      
+      try {
+        // Read the config file
+        const configPath = path.join(process.cwd(), 'config.json');
+        if (fs.existsSync(configPath)) {
+          const configData = fs.readFileSync(configPath, 'utf-8');
+          const config = JSON.parse(configData);
+          
+          // Get the system message for Alpaca if it exists
+          if (config.systemMessages && config.systemMessages.alpaca) {
+            instruction = config.systemMessages.alpaca;
+          }
+        }
+      } catch (error) {
+        console.log('Error reading config file. Using default system message.');
+      }
+      
+      // Replace placeholder with character name if available
+      if (metadata?.characterName) {
+        instruction = instruction.replace('{characterName}', characterName);
+      } else {
+        // If no character name is available, remove the placeholder
+        instruction = instruction.replace('{characterName}', 'an AI assistant');
+      }
       
       alpacaEntries.push({
         instruction,
